@@ -1,0 +1,199 @@
+<html>
+
+<head>
+	<meta name="description" content="Ramzi MiniLab 4 Final Copy">
+
+   <!-- Leaflet -->
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+   integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+   crossorigin=""/>
+   <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+   integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+   crossorigin=""></script>
+   <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+
+	<!-- Markerclusters -->
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v1.0.0/leaflet.markercluster.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v1.0.0/MarkerCluster.css' rel='stylesheet' />
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v1.0.0/MarkerCluster.Default.css' rel='stylesheet' />
+
+  <style>
+    .info {
+			padding: 10px 8px;
+			font: 22px/22px Arial, Helvetica, sans-serif;
+			background: white;
+			background: rgba(255, 255, 255, 0.8);
+			box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+			border-radius: 5px;
+		}
+
+		.info h4 {
+			margin: 0 0 5px;
+			color: #777;
+		}
+  </style>
+  </head>
+  
+  
+	<body>
+		<div id="map" style="width: 100%; height: 100%"></div>
+		<script>
+			// CONSTRUCT THE MAP
+			var map = L.map('map', {
+				center: [37.672926, -120.566385],
+				zoom: 7
+			});
+
+			// add baselayer to map
+			var baseLayer =  L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+				//minZoom: 0,
+				//maxZoom: 20,
+				ext: 'png'
+			}).addTo(map);
+            
+         
+        //-----------------------------------------------     
+		// CONTROL FOR POPUP ON MOUSE HOVER
+        //-----------------------------------------------     
+
+        var info = L.control({
+              position: 'bottomleft'
+        });
+
+		info.onAdd = function(map) {
+			this._div = L.DomUtil.create('div', 'info');
+			this.update();
+			return this._div;
+		};
+
+		info.update = function(props) {
+			this._div.innerHTML = '<h4>Geonames of Cali</h4>' + (props ?
+				'<b>' + props.name : 'Hover over a Point');
+		};
+
+		info.addTo(map);
+        
+          
+		function resetHighlight(e) {
+          info.update();
+			
+		}
+          
+        function highlightFeature(e) {
+			var layer = e.target;
+          info.update(layer.feature.properties);
+		}
+
+
+        function onEachFeature(feature, layer) {
+            layer.on({ //addEventListeners
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,// mouse moves over shape
+			
+			});
+		}
+          
+        
+       
+			//MarkerClusterGroup that collects all GeoJSON objects
+			var group = new L.markerClusterGroup().addTo(map);
+			var geojsonlayer;
+
+			//-----------------------------------------------
+			// FETCHING GEOJSON DATA FROM CARTODB
+			// CALL THE CARTODB SQL API HERE IN URL FORMAT
+			//-----------------------------------------------
+			
+            // constructing the query
+            var querystem ="https://ramzia.carto.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM geonames_CA WHERE to_tsvector( 'english', name) @@ to_tsquery( 'english', '";
+			var search = "Duck"; // can be gun, knife, blun_instrument, other
+			var query = querystem + search + "')";
+			//		    var query = "https://ramzia.carto.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM geonames_ca WHERE";
+			console.log("Initial query: " + query);
+
+            //running the query
+			$.getJSON(query, function(data) {
+					geojsonlayer = L.geoJson(data, { 
+                      onEachFeature: onEachFeature,
+						//onEachFeature: function(feature, layer) {
+							// ADD A POPUP WITH SOME INFO
+							//layer.bindPopup("<h2>" + feature.properties.name + "</p>");
+					}).addTo(group);
+				map.fitBounds(group.getBounds()); // zooms to fit data
+
+			});
+          
+
+     
+
+            //-----------------------------------------------     
+	    	// CONTROL FOR TEXT FIELD TO ENTER SEARCH TERM
+            //-----------------------------------------------     
+			var myControl = L.Control.extend({
+				options: {
+					position: 'bottomleft'
+				},
+				onAdd: function(map) {
+					this._div = L.DomUtil.create('div', 'myControl');
+					this._div.innerHTML = '<h1 id="title">Search term</h1>' +
+						'<input type="text" id="myTextField" value="Try Ocean." />' +
+						'<input type="submit" id="searchBtn" value="Search" onclick="change()"/>'
+					L.DomEvent.disableClickPropagation(this._div);
+					return this._div;
+				}
+			});
+			
+          map.addControl(new myControl());
+          
+            //-----------------------------------------------     
+            // FUNCTIONS FOR HANDLING SEARCH FIELD
+            //-----------------------------------------------     
+
+			// button functionality - get value from textfield and change layer
+			function change() {
+              search = document.getElementById('myTextField').value;
+				if (search.length == 0) {
+					alert('Nothing to search for...');
+					return;
+				}
+				// updating the layer means deleting the old one and
+				// adding a new one
+				group.removeLayer(geojsonlayer);
+
+				query = querystem + search + "')";
+				console.log("Changed query: " + query);
+
+				$.getJSON(query, function(data) {
+					geojsonlayer = L.geoJson(data, { 
+                      onEachFeature: onEachFeature,
+						//onEachFeature: function(feature, layer) {
+							// ADD A POPUP WITH SOME INFO
+							//layer.bindPopup("<h2>" + feature.properties.name + "</p>");
+					}).addTo(group);
+				});
+
+				var title = document.getElementById('title');
+				title.innerHTML = search;
+			}
+          
+          
+          	// Functions to either disable (onmouseover) or enable (onmouseout) the map's dragging
+/*
+            function controlEnter(e) {
+				map.dragging.disable();
+			}
+
+			function controlLeave(e) {
+				map.dragging.enable();
+			}
+			var inputTags = document.getElementsByTagName("input")
+			for (var i = 0; i < inputTags.length; i++) {
+				inputTags[i].onmouseover = controlEnter;
+				inputTags[i].onmouseout = controlLeave;
+			}
+*/
+		</script>
+	</body>
+
+</html>

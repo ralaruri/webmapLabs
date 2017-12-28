@@ -1,0 +1,85 @@
+<html>
+
+<head>
+<meta name="description" content="Ramzi A minilab 3 Edit">
+	
+    <!-- Leaflet -->
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"/> 
+   <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
+   <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+
+	<!-- Marker
+
+
+
+s -->
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v1.0.0/leaflet.markercluster.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v1.0.0/MarkerCluster.css' rel='stylesheet' />
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v1.0.0/MarkerCluster.Default.css' rel='stylesheet' />
+
+    <!-- jQuery -->
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+
+	<body>
+	    <div id="map" style="width: 100%; height: 100%"></div>
+		<script>
+            // CONSTRUCT THE MAP
+            var map = L.map('map', {
+ //             center: [36.783912, -119.402656], //California
+              center: [40.725509, -73.988958], //NYC
+              zoom: 10
+            });
+
+            // add baselayer to map
+			var baseLayer = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', {
+				attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+				subdomains: 'abcd',
+				//minZoom: 0,
+				//maxZoom: 20,
+				ext: 'png'
+			}).addTo(map);
+
+
+            console.log("Loading data...");
+           
+            //styles
+            var geojsonMarkerOptions = {
+    	      radius: 8,
+    	      fillColor: "#0066ff",
+    	      color: "#0047b3",
+    	      weight: 2,
+    	      opacity: 1,
+    	      fillOpacity: 0.7
+		    };
+
+            // CALL THE CARTODB SQL API HERE IN URL FORMAT
+
+            //MarkerClusterGroup that collects all GeoJSON objects
+            //var group = new L.markerClusterGroup().addTo(map);
+              var group = new L.FeatureGroup().addTo(map)
+          
+		    var query = "https://ramzia.carto.com/api/v2/sql?format=GeoJSON&q=select * from nyc_subway_stations WHERE borough = 'Queens'";
+            console.log("Query: "+query);
+
+            $.getJSON(query, function(cartodbdata) {
+              var geojsonlayer = L.geoJson(cartodbdata,{
+                // add popup with info to each geosjon feature
+                onEachFeature: function(feature, layer) {
+                  layer.bindPopup("<h2>" + feature.properties.name + "</h2>");
+			    },
+                //style the point marker
+                pointToLayer: function (feature, latlng) {
+				  return L.circleMarker(latlng, geojsonMarkerOptions);
+			    }
+			  }).addTo(group);
+            
+              map.fitBounds(group.getBounds()); // zooms to fit data
+    
+           });  
+
+          console.log("Done!");
+
+		</script>
+	</body>
+
+</html>

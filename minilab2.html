@@ -1,0 +1,74 @@
+<html>
+<head>
+<meta name="description" content="Ramzi Al-Aruri Minilab 2, of Centerville,VA Places to Eat">
+	<!-- Leaflet -->
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css"
+   integrity="sha512-07I2e+7D8p6he1SIM+1twR5TIrhUQn9+I6yjqD53JQjFiMf8EtC93ty0/5vJTZGF8aAocvHYNEDJajGdNx1IsQ=="
+   crossorigin=""/>
+   <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"
+   integrity="sha512-A7vV8IFfih/D732iSSKi20u/ooOfj/AGehOKq0f4vLT1Zr2Y+RX7C+w8A1gaSasGtRUZpF/NZgzSAu4/Gc41Lg=="
+   crossorigin=""></script>    
+
+</head>
+<body>
+	<div id="map" style="height: 100%"></div>
+	<script>
+      
+       // Markers of Restaurants in Centerville
+		var sweetwater = L.marker([38.829298, -77.438760]).bindPopup("Sweetwater Tavern");
+      	var bbq = L.marker([38.836268, -77.439143]).bindPopup("BBQ Chicken & Beer");
+      	var ironage = L.marker([38.836580, -77.433999]).bindPopup("Iron Age");
+        var kabobexpress = L.marker([38.835872, -77.435349]).bindPopup("Kabob Express");
+      //Layer Groups for Restaurants 
+        var placestoeat = L.layerGroup([sweetwater, bbq, ironage, kabobexpress]);
+        var Korean = L.layerGroup([bbq, ironage]);
+        var American = L.layerGroup([sweetwater]);
+        var Afghan = L.layerGroup([kabobexpress]);
+      
+  
+      
+      // Carto DB tile layer
+        var CartoLite = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+          subdomains: 'abcd',
+          maxZoom: 18
+        });
+        //Carto DB Dark tile Layer
+        var CartoDark = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+          subdomains: 'abcd',
+          maxZoom: 18
+        });
+       //Open Map Surfer Roads tile Layer
+        var OpenMapSurfer_Roads = L.tileLayer('https://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}', {
+          maxZoom: 20,
+          attribution: 'Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        });
+     
+      
+		var map = L.map('map', {
+		    center: new L.LatLng(38.833491,-77.432338),
+		    zoom: 15,
+		    layers: [CartoDark, placestoeat]
+		});
+
+		var baseMaps = {
+            "Light": CartoLite,
+            "Dark": CartoDark,
+            "Open Map Surfer": OpenMapSurfer_Roads
+		};
+
+		var overlayMaps = {
+			"Places To Eat": placestoeat,
+            "Korean": Korean,
+            "American": American,
+            "Afghan": Afghan
+		};
+
+		L.control.layers(baseMaps, overlayMaps).addTo(map);
+      
+      
+  
+	</script>
+</body>
+

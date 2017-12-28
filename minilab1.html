@@ -1,0 +1,39 @@
+<html>
+<head>
+<meta name="description" content="Ramzi Al-Aruri Minilab 1, of Durham Uni">
+	<!-- Leaflet -->
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css"
+   integrity="sha512-07I2e+7D8p6he1SIM+1twR5TIrhUQn9+I6yjqD53JQjFiMf8EtC93ty0/5vJTZGF8aAocvHYNEDJajGdNx1IsQ=="
+   crossorigin=""/>
+   <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"
+   integrity="sha512-A7vV8IFfih/D732iSSKi20u/ooOfj/AGehOKq0f4vLT1Zr2Y+RX7C+w8A1gaSasGtRUZpF/NZgzSAu4/Gc41Lg=="
+   crossorigin=""></script>    
+
+</head>
+<body>
+	<div id="map" style="height: 100%"></div>
+	<script>
+		// create a map in the "map" div, set the view to a given place and zoom
+        // Centered at Durham Uni main campus in the UK.
+		var map = L.map('map').setView([54.763398, -1.578551], 9);
+
+		// Carto DB tile layer
+        L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+          subdomains: 'abcd',
+          maxZoom: 18
+          }).addTo(map);
+      
+         // Marker at Collingwood College of Durham University Main Campus
+		var collingwood = L.marker([54.762898, -1.576438]).addTo(map);
+        // Marker at Collingwood College of Durham University Second Campus
+        var johnsnow = L.marker([54.560300, -1.305420]).addTo(map);
+  
+            
+        collingwood.bindPopup("Collingwood College").openPopup();
+        johnsnow.bindPopup("John Snow College").openPopup();
+      
+        // Marker at Collingwood College of Durham University
+		//L.marker([54.762898, -1.576438]).addTo(map);
+	</script>
+</body>
